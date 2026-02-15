@@ -24,7 +24,7 @@ To keep this project secure, sensitive credentials are not stored in the reposit
 
 ### A. Environment Variables (`.env`)
 
-Create a file named .env in the root directory. This file is ignored by Git.
+Create a file named `.env` in the root directory. This file is ignored by Git.
 
 ```Bash
 # .env
