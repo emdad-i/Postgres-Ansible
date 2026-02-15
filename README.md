@@ -107,3 +107,9 @@ psql -h localhost -U charlie -d app_db
 # Test as Bob (Writer) - Should be able to INSERT/UPDATE
 psql -h localhost -U bob -d app_db
 ```
+
+## Docker down
+Bring the container down when no longer required.
+```Bash
+docker-compose down
+```
