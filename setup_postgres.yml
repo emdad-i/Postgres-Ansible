@@ -1,0 +1,63 @@
+---
+- name: Database Configuration
+  hosts: localhost
+  connection: local
+  vars_files:
+    - vars/vault.yml
+  vars:
+    # Look up environment variables from your shell/.env
+    admin_user: "{{ lookup('env', 'DB_ADMIN_USER') }}"
+    admin_pass: "{{ lookup('env', 'DB_ADMIN_PASS') }}"
+    db_name: "{{ lookup('env', 'DB_NAME') }}"
+
+  tasks:
+    - name: Ensure Group Roles exist
+      community.postgresql.postgresql_user:
+        name: "{{ item }}"
+        role_attr_flags: "NOLOGIN"
+        login_host: localhost
+        login_user: "{{ admin_user }}"
+        login_password: "{{ admin_pass }}"
+        db: postgres
+      loop: [ 'db_owner', 'db_writer', 'db_reader' ]
+
+    - name: Create Individual Users
+      community.postgresql.postgresql_user:
+        name: "{{ item.name }}"
+        password: "{{ item.pass }}"
+        login_host: localhost
+        login_user: "{{ admin_user }}"
+        login_password: "{{ admin_pass }}"
+        db: postgres
+      loop:
+        - { name: 'alice', pass: "{{ vault_alice_pass }}" }
+        - { name: 'bob',   pass: "{{ vault_bob_pass }}" }
+        - { name: 'charlie', pass: "{{ vault_charlie_pass }}" }
+
+    - name: Map Users to Roles
+      community.postgresql.postgresql_membership:
+        group: "{{ item.group }}"
+        target_roles: "{{ item.user }}"
+        login_host: localhost
+        login_user: "{{ admin_user }}"
+        login_password: "{{ admin_pass }}"
+        db: postgres
+      loop:
+        - { group: 'db_owner',  user: 'alice' }
+        - { group: 'db_writer', user: 'bob' }
+        - { group: 'db_reader', user: 'charlie' }
+
+    - name: Grant Permissions to Group Roles
+      community.postgresql.postgresql_privs:
+        db: "{{ db_name }}"
+        role: "{{ item.role }}"
+        objs: ALL_IN_SCHEMA
+        privs: "{{ item.privs }}"
+        schema: public
+        login_host: localhost
+        login_user: "{{ admin_user }}"
+        login_password: "{{ admin_pass }}"
+      loop:
+        - { role: 'db_reader', privs: 'SELECT' }
+        - { role: 'db_writer', privs: 'SELECT,INSERT,UPDATE,DELETE' }
+        - { role: 'db_owner',  privs: 'ALL' }
