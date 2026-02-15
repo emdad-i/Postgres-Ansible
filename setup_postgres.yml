@@ -18,7 +18,7 @@
         login_host: localhost
         login_user: "{{ admin_user }}"
         login_password: "{{ admin_pass }}"
-        db: postgres
+        login_db: postgres
       loop: [ 'db_owner', 'db_writer', 'db_reader' ]
 
     - name: Create Individual Users
@@ -28,7 +28,7 @@
         login_host: localhost
         login_user: "{{ admin_user }}"
         login_password: "{{ admin_pass }}"
-        db: postgres
+        login_db: postgres
       loop:
         - { name: 'alice', pass: "{{ vault_alice_pass }}" }
         - { name: 'bob',   pass: "{{ vault_bob_pass }}" }
@@ -41,7 +41,7 @@
         login_host: localhost
         login_user: "{{ admin_user }}"
         login_password: "{{ admin_pass }}"
-        db: postgres
+        login_db: postgres
       loop:
         - { group: 'db_owner',  user: 'alice' }
         - { group: 'db_writer', user: 'bob' }
@@ -49,7 +49,7 @@
 
     - name: Grant Permissions to Group Roles
       community.postgresql.postgresql_privs:
-        db: "{{ db_name }}"
+        login_db: "{{ db_name }}"
         role: "{{ item.role }}"
         objs: ALL_IN_SCHEMA
         privs: "{{ item.privs }}"
